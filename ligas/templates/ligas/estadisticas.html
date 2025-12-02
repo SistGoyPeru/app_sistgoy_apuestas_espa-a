@@ -1,0 +1,123 @@
+{% extends 'ligas/base.html' %}
+
+{% block content %}
+<style>
+    h2 { color: #f4c430; font-size: 1.8em; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
+    h3 { color: #f4c430; font-size: 1.3em; text-transform: uppercase; letter-spacing: 1px; margin: 30px 0 20px 0; }
+    .liga-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 2px solid #f4c430; }
+    
+    /* Stats cards */
+    .stats-destacadas { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 30px; }
+    .stat-card { background: #243447; border: 1px solid #3d4e60; border-left: 4px solid #f4c430; border-radius: 6px; padding: 20px; text-align: center; }
+    .stat-card-titulo { font-size: 0.85em; color: #a0aec0; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+    .stat-card-valor { font-size: 1.8em; font-weight: bold; color: #f4c430; margin-bottom: 5px; }
+    .stat-card-detalle { font-size: 0.9em; color: #fff; }
+    
+    .tabla { width: 100%; border-collapse: collapse; background: #243447; border: 1px solid #3d4e60; border-radius: 8px; overflow: hidden; }
+    .tabla th { background: #2d3e50; color: #f4c430; padding: 16px 12px; text-align: left; text-transform: uppercase; font-size: 0.85em; letter-spacing: 0.5px; border-bottom: 2px solid #f4c430; }
+    .tabla td { padding: 14px 12px; border-bottom: 1px solid #3d4e60; color: #fff; }
+    .tabla tr:hover { background: #2d3e50; }
+    .tabla .posicion { font-weight: bold; color: #f4c430; width: 50px; text-align: center; font-size: 1.1em; }
+    .tabla .equipo-nombre { font-weight: bold; font-size: 1em; }
+    .tabla .numero { text-align: center; width: 70px; font-weight: 600; }
+    .diferencia-positiva { color: #7cfc00; font-weight: bold; }
+    .diferencia-negativa { color: #ff6b6b; font-weight: bold; }
+    .tabla tbody tr:nth-child(1) .posicion { background: #ffd700; color: #0f1923; border-radius: 4px; }
+    .tabla tbody tr:nth-child(2) .posicion { background: #c0c0c0; color: #0f1923; border-radius: 4px; }
+    .tabla tbody tr:nth-child(3) .posicion { background: #cd7f32; color: #0f1923; border-radius: 4px; }
+    
+    /* Racha */
+    .racha { display: flex; gap: 3px; justify-content: center; }
+    .racha-item { width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center; border-radius: 3px; font-size: 0.7em; font-weight: bold; }
+    .racha-v { background: #1e4620; color: #7cfc00; }
+    .racha-e { background: #4a3d1a; color: #ffd700; }
+    .racha-d { background: #4a1a1a; color: #ff6b6b; }
+</style>
+
+<div class="liga-header">
+    <div>
+        <h2>📋 Tabla de Posiciones - {{ liga.nombre }}</h2>
+        {% if liga.pais %}
+        <p style="color: #a0aec0;">📍 {{ liga.pais }}</p>
+        {% endif %}
+    </div>
+    <a href="{% url 'ligas:lista_partidos' liga.id %}" style="background: #f4c430; color: #0f1923; padding: 12px 25px; text-decoration: none; border-radius: 4px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; transition: all 0.3s;">
+        📅 Partidos
+    </a>
+</div>
+
+<!-- Estadísticas Destacadas -->
+<div class="stats-destacadas">
+    {% if mas_puntos %}
+    <div class="stat-card">
+        <div class="stat-card-titulo">🏆 Líder</div>
+        <div class="stat-card-valor">{{ mas_puntos.puntos }}</div>
+        <div class="stat-card-detalle">{{ mas_puntos.equipo.nombre }}</div>
+    </div>
+    {% endif %}
+    
+    {% if mejor_ataque %}
+    <div class="stat-card">
+        <div class="stat-card-titulo">⚽ Mejor Ataque</div>
+        <div class="stat-card-valor">{{ mejor_ataque.goles_favor }}</div>
+        <div class="stat-card-detalle">{{ mejor_ataque.equipo.nombre }}</div>
+    </div>
+    {% endif %}
+    
+    {% if mejor_defensa %}
+    <div class="stat-card">
+        <div class="stat-card-titulo">🛡️ Mejor Defensa</div>
+        <div class="stat-card-valor">{{ mejor_defensa.goles_contra }}</div>
+        <div class="stat-card-detalle">{{ mejor_defensa.equipo.nombre }}</div>
+    </div>
+    {% endif %}
+</div>
+
+<h3>📋 Tabla de Posiciones</h3>
+{% if estadisticas %}
+<table class="tabla">
+    <thead>
+        <tr>
+            <th class="posicion">#</th>
+            <th>Equipo</th>
+            <th class="numero">PJ</th>
+            <th class="numero">V</th>
+            <th class="numero">E</th>
+            <th class="numero">D</th>
+            <th class="numero">GF</th>
+            <th class="numero">GC</th>
+            <th class="numero">DG</th>
+            <th class="numero">Pts</th>
+            <th style="text-align: center;">Racha</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for stat in estadisticas %}
+        <tr>
+            <td class="posicion">{{ forloop.counter }}</td>
+            <td class="equipo-nombre">{{ stat.equipo.nombre }}</td>
+            <td class="numero">{{ stat.partidos_jugados }}</td>
+            <td class="numero">{{ stat.victorias }}</td>
+            <td class="numero">{{ stat.empates }}</td>
+            <td class="numero">{{ stat.derrotas }}</td>
+            <td class="numero">{{ stat.goles_favor }}</td>
+            <td class="numero">{{ stat.goles_contra }}</td>
+            <td class="numero {% if stat.diferencia_goles > 0 %}diferencia-positiva{% elif stat.diferencia_goles < 0 %}diferencia-negativa{% endif %}">
+                {{ stat.diferencia_goles|stringformat:"+d" }}
+            </td>
+            <td class="numero" style="font-weight: bold; color: #f4c430;">{{ stat.puntos }}</td>
+            <td>
+                <div class="racha">
+                    {% for resultado in stat.racha %}
+                        <span class="racha-item racha-{{ resultado|lower }}" title="{% if resultado == 'V' %}Victoria{% elif resultado == 'E' %}Empate{% else %}Derrota{% endif %}">{{ resultado }}</span>
+                    {% endfor %}
+                </div>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p style="text-align: center; padding: 40px; color: #a0aec0;">No hay datos disponibles</p>
+{% endif %}
+{% endblock %}

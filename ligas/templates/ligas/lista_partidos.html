@@ -1,0 +1,206 @@
+{% extends 'ligas/base.html' %}
+
+{% block content %}
+<style>
+    h2 { color: #f4c430; font-size: 1.8em; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
+    .liga-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 2px solid #f4c430; }
+    
+    /* Tabs */
+    .tabs-container { margin-bottom: 30px; }
+    .tabs { display: flex; gap: 10px; border-bottom: 2px solid #3d4e60; margin-bottom: 25px; }
+    .tab { padding: 12px 30px; background: #243447; border: 1px solid #3d4e60; border-bottom: none; border-radius: 6px 6px 0 0; cursor: pointer; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; color: #a0aec0; transition: all 0.3s; position: relative; top: 2px; }
+    .tab:hover { background: #2d3e50; color: #f4c430; }
+    .tab.active { background: #0f1923; color: #f4c430; border-color: #f4c430; border-bottom: 2px solid #0f1923; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    
+    .partidos-lista { display: grid; gap: 12px; }
+    .partido { background: #243447; border: 1px solid #3d4e60; border-left: 4px solid #f4c430; border-radius: 6px; padding: 20px; transition: all 0.3s; }
+    .partido:hover { border-color: #f4c430; box-shadow: 0 5px 15px rgba(244, 196, 48, 0.2); background: #2d3e50; transform: translateX(5px); }
+    .partido-jornada { font-size: 0.85em; color: #a0aec0; margin-bottom: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; }
+    .partido-equipos { display: flex; justify-content: space-between; align-items: center; margin: 15px 0; }
+    .equipo { font-size: 1.15em; font-weight: bold; flex: 1; color: #fff; }
+    .equipo.local { text-align: right; padding-right: 15px; }
+    .equipo.visitante { text-align: left; padding-left: 15px; }
+    .resultado { font-size: 2em; font-weight: bold; color: #f4c430; padding: 0 20px; min-width: 100px; text-align: center; background: #2d3e50; border-radius: 4px; border: 1px solid #3d4e60; }
+    .estado { display: inline-block; padding: 6px 16px; border-radius: 4px; font-size: 0.85em; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; }
+    .estado.finalizado { background: #1e4620; color: #7cfc00; border: 1px solid #7cfc00; }
+    .estado.programado { background: #4a3d1a; color: #ffd700; border: 1px solid #ffd700; }
+    .estado.en_juego { background: #8b0000; color: #ff4444; border: 1px solid #ff4444; animation: pulse 2s infinite; }
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.6; }
+    }
+    .live-indicator { display: inline-block; width: 8px; height: 8px; background: #ff4444; border-radius: 50%; margin-right: 5px; animation: pulse 2s infinite; }
+    .partido-fecha { font-size: 0.85em; color: #a0aec0; margin-top: 12px; }
+    .no-partidos { text-align: center; padding: 40px; color: #a0aec0; background: #243447; border-radius: 6px; border: 1px solid #3d4e60; }
+</style>
+
+<div class="liga-header">
+    <div>
+        <h2>📅 Partidos - {{ liga.nombre }}</h2>
+        {% if liga.pais %}
+        <p style="color: #a0aec0;">📍 {{ liga.pais }}</p>
+        {% endif %}
+    </div>
+    <a href="{% url 'ligas:estadisticas' liga.id %}" style="background: #f4c430; color: #0f1923; padding: 12px 25px; text-decoration: none; border-radius: 4px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; transition: all 0.3s;">
+        📊 Tabla
+    </a>
+</div>
+
+<!-- Tabs -->
+<div class="tabs-container">
+    <div class="tabs">
+        <div class="tab active" onclick="switchTab('por-jugar')">🔜 Por Jugar ({{ partidos_por_jugar.count }})</div>
+        <div class="tab" onclick="switchTab('en-juego')">⚽ En Juego ({{ partidos_en_juego.count }})</div>
+        <div class="tab" onclick="switchTab('jugados')">✅ Jugados ({{ partidos_jugados.count }})</div>
+    </div>
+    
+    <!-- Tab: Por Jugar -->
+    <div id="por-jugar" class="tab-content active">
+        {% if partidos_por_jugar %}
+        <div class="partidos-lista">
+            {% for partido in partidos_por_jugar %}
+            <a href="{% url 'ligas:comparacion_equipos' partido.id %}" style="text-decoration: none; color: inherit; display: block;">
+                <div class="partido" style="cursor: pointer; transition: all 0.3s;">
+                    <div class="partido-jornada">Jornada {{ partido.jornada }}</div>
+                    <div class="partido-equipos">
+                        <div class="equipo local">{{ partido.equipo_local.nombre }}</div>
+                        <div class="resultado">vs</div>
+                        <div class="equipo visitante">{{ partido.equipo_visitante.nombre }}</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <span class="estado {{ partido.estado }}">{{ partido.get_estado_display }}</span>
+                        {% if partido.fecha %}
+                        <span class="partido-fecha">📅 {{ partido.fecha|date:"d/m/Y" }} {% if partido.hora %}{{ partido.hora|time:"H:i" }}{% endif %}</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="no-partidos">No hay partidos programados</div>
+        {% endif %}
+    </div>
+    
+    <!-- Tab: En Juego -->
+    <div id="en-juego" class="tab-content">
+        {% if partidos_en_juego %}
+        <div class="partidos-lista" id="partidos-en-juego-lista">
+            {% for partido in partidos_en_juego %}
+            <a href="{% url 'ligas:comparacion_equipos' partido.id %}" style="text-decoration: none; color: inherit; display: block;">
+                <div class="partido" data-partido-id="{{ partido.id }}" style="cursor: pointer; transition: all 0.3s;">
+                    <div class="partido-jornada">Jornada {{ partido.jornada }}</div>
+                    <div class="partido-equipos">
+                        <div class="equipo local">{{ partido.equipo_local.nombre }}</div>
+                        <div class="resultado partido-resultado-{{ partido.id }}">
+                            {% if partido.goles_local is not None and partido.goles_visitante is not None %}
+                                {{ partido.goles_local }} - {{ partido.goles_visitante }}
+                            {% else %}
+                                0 - 0
+                            {% endif %}
+                        </div>
+                        <div class="equipo visitante">{{ partido.equipo_visitante.nombre }}</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <span class="estado {{ partido.estado }}">
+                            <span class="live-indicator"></span>{{ partido.get_estado_display }}
+                        </span>
+                        {% if partido.fecha %}
+                        <span class="partido-fecha">📅 {{ partido.fecha|date:"d/m/Y" }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="no-partidos">No hay partidos en juego en este momento</div>
+        {% endif %}
+    </div>
+    
+    <!-- Tab: Jugados -->
+    <div id="jugados" class="tab-content">
+        {% if partidos_jugados %}
+        <div class="partidos-lista">
+            {% for partido in partidos_jugados %}
+            <a href="{% url 'ligas:comparacion_equipos' partido.id %}" style="text-decoration: none; color: inherit; display: block;">
+                <div class="partido" style="cursor: pointer; transition: all 0.3s;">
+                    <div class="partido-jornada">Jornada {{ partido.jornada }}</div>
+                    <div class="partido-equipos">
+                        <div class="equipo local">{{ partido.equipo_local.nombre }}</div>
+                        <div class="resultado">{{ partido.goles_local }} - {{ partido.goles_visitante }}</div>
+                        <div class="equipo visitante">{{ partido.equipo_visitante.nombre }}</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <span class="estado {{ partido.estado }}">{{ partido.get_estado_display }}</span>
+                        {% if partido.fecha %}
+                        <span class="partido-fecha">📅 {{ partido.fecha|date:"d/m/Y" }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="no-partidos">No hay partidos finalizados</div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+function switchTab(tabName) {
+    // Ocultar todos los contenidos
+    document.querySelectorAll('.tab-content').forEach(content => {
+        content.classList.remove('active');
+    });
+    
+    // Desactivar todos los tabs
+    document.querySelectorAll('.tab').forEach(tab => {
+        tab.classList.remove('active');
+    });
+    
+    // Mostrar el contenido seleccionado
+    document.getElementById(tabName).classList.add('active');
+    
+    // Activar el tab seleccionado
+    event.target.classList.add('active');
+}
+
+// Actualizar resultados de partidos en juego cada 30 segundos
+function actualizarPartidosEnJuego() {
+    fetch('{% url "ligas:partidos_en_juego_api" liga.id %}')
+        .then(response => response.json())
+        .then(data => {
+            data.partidos.forEach(partido => {
+                const resultadoElement = document.querySelector(`.partido-resultado-${partido.id}`);
+                if (resultadoElement) {
+                    const nuevoResultado = `${partido.goles_local} - ${partido.goles_visitante}`;
+                    if (resultadoElement.textContent.trim() !== nuevoResultado) {
+                        resultadoElement.textContent = nuevoResultado;
+                        // Efecto visual de actualización
+                        resultadoElement.style.animation = 'none';
+                        setTimeout(() => {
+                            resultadoElement.style.animation = 'pulse 0.5s';
+                        }, 10);
+                    }
+                }
+            });
+            
+            // Actualizar contador en la pestaña
+            const tabEnJuego = document.querySelector('.tab[onclick*="en-juego"]');
+            if (tabEnJuego) {
+                const count = data.partidos.length;
+                tabEnJuego.innerHTML = `⚽ En Juego (${count})`;
+            }
+        })
+        .catch(error => console.error('Error al actualizar partidos:', error));
+}
+
+// Actualizar cada 30 segundos si hay partidos en juego
+{% if partidos_en_juego.count > 0 %}
+setInterval(actualizarPartidosEnJuego, 30000);
+{% endif %}
+</script>
+{% endblock %}

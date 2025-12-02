@@ -1,0 +1,68 @@
+{% extends 'ligas/base.html' %}
+
+{% block content %}
+<style>
+    h2 { color: #f4c430; margin-bottom: 10px; font-size: 1.8em; text-transform: uppercase; letter-spacing: 1px; }
+    .form-container { max-width: 700px; margin: 0 auto; background: #243447; padding: 30px; border-radius: 8px; border: 1px solid #3d4e60; }
+    .form-group { margin-bottom: 25px; }
+    .form-group label { display: block; margin-bottom: 10px; font-weight: bold; color: #f4c430; text-transform: uppercase; font-size: 0.9em; letter-spacing: 0.5px; }
+    .form-group input { width: 100%; padding: 14px; border: 1px solid #3d4e60; background: #2d3e50; border-radius: 4px; font-size: 1em; transition: all 0.3s; color: #fff; }
+    .form-group input:focus { outline: none; border-color: #f4c430; background: #1a2634; }
+    .form-group select { width: 100%; padding: 14px; border: 1px solid #3d4e60; background: #2d3e50; border-radius: 4px; font-size: 1em; transition: all 0.3s; color: #fff; cursor: pointer; }
+    .form-group select:focus { outline: none; border-color: #f4c430; background: #1a2634; }
+    .form-group select option { background: #2d3e50; color: #fff; }
+    .form-help { font-size: 0.85em; color: #a0aec0; margin-top: 8px; }
+    .form-example { background: #2d3e50; padding: 18px; border-radius: 4px; margin-top: 12px; border-left: 3px solid #f4c430; }
+    .form-example strong { color: #f4c430; }
+    .btn-submit { width: 100%; padding: 16px; background: #f4c430; color: #0f1923; border: none; border-radius: 4px; font-size: 1em; font-weight: bold; cursor: pointer; transition: all 0.3s; text-transform: uppercase; letter-spacing: 1px; }
+    .btn-submit:hover { background: #ffd700; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(244, 196, 48, 0.3); }
+</style>
+
+<div class="form-container">
+    <h2>📡 Agregar/Actualizar Liga</h2>
+    <p style="margin-bottom: 30px; color: #a0aec0; font-size: 0.95em;">Ingresa los datos de la liga para cargar automáticamente todos sus partidos en tiempo real</p>
+    
+    <form method="post">
+        {% csrf_token %}
+        
+        <div class="form-group">
+            <label for="nombre">Nombre de la Liga *</label>
+            <input type="text" id="nombre" name="nombre" required placeholder="Ej: Premier League">
+            <div class="form-help">Nombre completo de la liga</div>
+        </div>
+        
+        <div class="form-group">
+            <label for="url">URL de LiveFutbol *</label>
+            <input type="url" id="url" name="url" required placeholder="https://www.livefutbol.com/competition/...">
+            <div class="form-help">URL de la página de "all-matches" de la liga</div>
+            <div class="form-example">
+                <strong>Ejemplos:</strong><br>
+                • Premier League: https://www.livefutbol.com/competition/co91/inglaterra-premier-league/all-matches/<br>
+                • La Liga: https://www.livefutbol.com/competition/co97/espana-primera-division/all-matches/<br>
+                • Bundesliga: https://www.livefutbol.com/competition/co12/alemania-bundesliga/all-matches/
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label for="continente">Continente *</label>
+            <select id="continente" name="continente" required>
+                <option value="">Selecciona un continente</option>
+                <option value="europa">🌍 Europa</option>
+                <option value="america">🌎 América</option>
+                <option value="asia">🌏 Asia</option>
+                <option value="africa">🌍 África</option>
+                <option value="oceania">🌏 Oceanía</option>
+            </select>
+            <div class="form-help">Continente al que pertenece la liga</div>
+        </div>
+        
+        <div class="form-group">
+            <label for="pais">País</label>
+            <input type="text" id="pais" name="pais" placeholder="Ej: Inglaterra">
+            <div class="form-help">País de la liga (opcional)</div>
+        </div>
+        
+        <button type="submit" class="btn-submit">🚀 Cargar Liga</button>
+    </form>
+</div>
+{% endblock %}
