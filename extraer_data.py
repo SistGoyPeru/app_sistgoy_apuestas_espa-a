@@ -208,7 +208,4 @@ class CalendarExtractor:
         self.fetch_and_parse()
         self.save_to_csv()
 
-if __name__ == "__main__":
-    url = "https://www.livefutbol.com/competition/co97/espana-primera-division/all-matches/"
-    extractor = CalendarExtractor(url)
-    extractor.run()
+
